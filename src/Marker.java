@@ -82,7 +82,90 @@ public class Marker {
      * Example: a = "ACGTAC", b = "TTACGT", k = 4: the words of a are ACGT, CGTA, GTAC; only ACGT is in b, so the answer is 1.
      */
     public static int sharedWords(String a, String b, int k) {
-        // TODO Mission 4
-        return -1;
+        if (k <= 0 || a.length() < k || b.length() < k) {
+            return 0;
+        }
+
+        long base = 5;
+        long mod = 1000000007L;
+
+        long highest = 1;
+
+        for (int i = 1; i < k; i++) {
+            highest = (highest * base) % mod;
+        }
+
+        HashMap<Long, ArrayList<Integer>> positions = new HashMap<>();
+
+        long hash = 0;
+
+        for (int i = 0; i < k; i++) {
+            hash = (hash * base + value(b.charAt(i))) % mod;
+        }
+
+        positions.computeIfAbsent(hash, x -> new ArrayList<>()).add(0);
+
+        for (int i = k; i < b.length(); i++) {
+            hash = (hash - value(b.charAt(i - k)) * highest % mod + mod) % mod;
+
+            hash = (hash * base + value(b.charAt(i))) % mod;
+
+            positions.computeIfAbsent(hash, x -> new ArrayList<>()).add(i - k + 1);
+        }
+
+        int count = 0;
+
+        hash = 0;
+
+        for (int i = 0; i < k; i++) {
+            hash = (hash * base + value(a.charAt(i))) % mod;
+        }
+
+        if (containsSameWord(a, 0, b, positions.get(hash), k)) {
+            count++;
+        }
+
+        for (int i = k; i < a.length(); i++) {
+            hash = (hash - value(a.charAt(i - k)) * highest % mod + mod) % mod;
+
+            hash = (hash * base + value(a.charAt(i))) % mod;
+
+            if (containsSameWord(a, i - k + 1, b, positions.get(hash), k)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int value(char c) {
+        if (c == 'A') return 1;
+        if (c == 'C') return 2;
+        if (c == 'G') return 3;
+        return 4;
+    }
+
+    private static boolean containsSameWord(
+        String a,
+        int start,
+        String b,
+        ArrayList<Integer> candidates,
+        int k) {
+
+        if (candidates == null) {
+            return false;
+        }
+
+        for (int pos : candidates) {
+            int j = 0;
+
+            while (j < k && a.charAt(start + j) == b.charAt(pos + j)) {
+                j++;
+            }
+
+            if (j == k) {
+                return true;
+            }
+        }
+        return false;
     }
 }
